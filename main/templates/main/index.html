@@ -1,0 +1,61 @@
+{% extends 'main/base.html'%}
+{% block title %}
+    {{ title }}
+{% endblock %}
+
+{% block content %}
+    <div class="row row-cols-1 row-cols-md-2 align-items-md-center g-5 py-5">
+      <div class="col d-flex flex-column align-items-start gap-2">
+        <h3 class="fw-bold">Note App</h3>
+        <p class="text-muted">Наше приложение призвано помочь вам получить легкий
+            доступ к вашим собственным идеям и мыслям в цифровом формате</p>
+      </div>
+
+      <div class="col">
+        <div class="row row-cols-1 row-cols-sm-2 g-4">
+          <div class="col d-flex flex-column gap-2">
+            <div class="d-inline-flex align-items-center justify-content-center text-bg-warning bg-gradient fs-4 rounded-3">
+              <svg class="bi" width="1em" height="1em">
+                <use xlink:href="#collection"></use>
+              </svg>
+            </div>
+            <h4 class="fw-semibold mb-0">Сортируйте</h4>
+            <p class="text-muted">Вы можете сортировать свои заметки по цвету или теме,
+                чтобы быстрее ориентироваться в них.</p>
+          </div>
+
+          <div class="col d-flex flex-column gap-2">
+            <div class="d-inline-flex align-items-center justify-content-center text-bg-warning bg-gradient fs-4 rounded-3">
+              <svg class="bi" width="1em" height="1em">
+                <use xlink:href="#gear-fill"></use>
+              </svg>
+            </div>
+            <h4 class="fw-semibold mb-0">Дополняйте</h4>
+            <p class="text-muted">Приложение позволяет вам прикрепить к заметкам файлы размером до 10Мб.</p>
+          </div>
+
+          <div class="col d-flex flex-column gap-2">
+            <div class="d-inline-flex align-items-center justify-content-center text-bg-warning bg-gradient fs-4 rounded-3">
+              <svg class="bi" width="1em" height="1em">
+                <use xlink:href="#speedometer"></use>
+              </svg>
+            </div>
+            <h4 class="fw-semibold mb-0">Сохраняйте</h4>
+            <p class="text-muted">Присутствует возможность сохранения заметки в формате .txt или .pdf
+                для скачивания на ваше устройство и просмотра без интернета.</p>
+          </div>
+
+          <div class="col d-flex flex-column gap-2">
+            <div class="d-inline-flex align-items-center justify-content-center text-bg-warning bg-gradient fs-4 rounded-3">
+              <svg class="bi" width="1em" height="1em">
+                <use xlink:href="#table"></use>
+              </svg>
+            </div>
+            <h4 class="fw-semibold mb-0">Восстанавливайте</h4>
+            <p class="text-muted">Все удаленные вами заметки будут помещены в корзину,
+                откуда в течении 7-ми дней вы сможете восстановить их.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+{% endblock %}

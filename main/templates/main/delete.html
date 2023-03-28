@@ -1,0 +1,13 @@
+{% extends 'main/base.html'%}
+{% block title %}
+    Удаление заметки
+{% endblock %}
+
+{% block content %}
+    <h1>{{task.title}}</h1>
+    <form method="post">
+        {% csrf_token %}
+        <p>Вы уверены что хотите удалить эту заметку?</p>
+        <button type="submit" class="btn btn-danger">Удалить заметку</button>
+    </form>
+{% endblock %}

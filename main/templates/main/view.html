@@ -1,0 +1,27 @@
+{% extends 'main/base.html'%}
+{% load static %}
+
+{% block title %}Заметки{% endblock %}
+
+{% block content %}
+    <a href="{% url 'create' %}" class="btn btn-success btn-lg my-2" role="button" aria-pressed="true">
+            <img src = '{% static "create/img/add.png" %}' class="pb-1" style='width: 20px'/> Добавить запись
+    </a><br>
+    <h1>Ваши записи:</h1>
+    {% if tasks %}
+        {% for el in tasks %}
+        <div class="alert alert-dark">
+            <h3 class="mb-0 text-dark">{{ el.title|upper }}</h3>
+            <pre class="mb-auto text-dark"><span class="inner-pre" style="font-family:'Helvetica'; font-size: 18px">{{ el.task|truncatechars:100 }}</span></pre>
+            <a href="{% url 'task-upd' el.id %}" class="btn btn-outline-dark m-1">
+                Редактировать
+            </a>
+            <a href="{% url 'task-dlt' el.id %}" class="btn btn-outline-danger m-1">
+                Удалить
+            </a>
+        </div>
+        {% endfor %}
+    {% else %}
+        <p>У вас ещё нет записей</p>
+    {% endif %}
+{% endblock %}

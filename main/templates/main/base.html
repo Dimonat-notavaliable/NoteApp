@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="ru">
+{% load static %}
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>{% block title %}{% endblock %}</title>
+    <link rel = "icon" type = "image/png" href ="{% static 'bar/img/notes.png' %}">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css">
+    <style type="text/css">
+        body {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        .footer {
+            margin-top: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header class="d-flex flex-wrap align-items-center justify-content-center justify-content-md-between py-3 mb-4 border-bottom">
+          <a href="/" class="d-flex align-items-center col-md-3 mb-2 mb-md-0 text-dark text-decoration-none">
+            <svg class="bi me-2" width="40" height="32" role="img" aria-label="Bootstrap"><use xlink:href="#bootstrap"></use></svg>
+          </a>
+
+          <ul class="nav col-12 col-md-auto mb-2 justify-content-center mb-md-0">
+            {% if user.is_authenticated %}
+                <li><a href="{% url 'home' %}" class="nav-link px-2 link-dark">Главная</a></li>
+                {% if user.is_superuser %}
+                    <li><a href="{% url 'data' %}" class="nav-link px-2 link-dark">Записи пользователей</a></li>
+                    <li><a href="{% url 'admin:index' %}" class="nav-link px-2 link-dark">Администрирование</a></li>
+                {% else %}
+                    <li><a href="{% url 'notes' %}" class="nav-link px-2 link-dark">Заметки</a></li>
+                {% endif %}
+
+            {% endif %}
+
+          </ul>
+
+          <div class="col-md-3 text-end">
+            {% if user.is_authenticated %}
+              <a href="{% url 'profile' %}"><button type="button" class="btn btn-outline-dark me-2">Профиль</button></a>
+              <a href="{% url 'logout' %}"><button type="button" class="btn btn-danger me-2">Выйти</button></a>
+            {% else %}
+                <a href="{% url 'login' %}"><button type="button" class="btn btn-outline-warning me-2">Войти</button></a>
+                <a href="{% url 'register' %}"><button type="button" class="btn btn-warning">Зарегистрироваться</button></a>
+            {% endif %}
+          </div>
+        </header>
+    </div>
+    <div class="container">
+        {% block content %}{% endblock %}
+    </div>
+    <div class="container footer">
+        <footer class="d-flex flex-wrap justify-content-between align-items-center py-3 border-top">
+            <div class="col-md-4 d-flex align-items-center">
+                <p class="mb-3 mb-md-0 text-muted">
+                  © 2023 Шушин Дмитрий, ТПУ
+                </p>
+            </div>
+            <div class=" justify-content-end d-flex">
+                <p class="mb-3 mb-md-0 text-muted">Контакты:</p>
+                <ul class="nav list-unstyled">
+                    <li class="ms-3"><a href="https://vk.com/ds.shushin " target="_blank"><img src="{% static 'footer/vk.png' %}" alt="VK" style="width:30px;height:30px;"></a></li>
+                    <li class="ms-3"><a href="https://t.me/Dimon_at" target="_blank"><img src="{% static 'footer/telegram.png' %}" alt="TELEGRAM" style="width:30px;height:30px;"></a></li>
+                </ul>
+            </div>
+        </footer>
+    </div>
+</body>
+</html>
