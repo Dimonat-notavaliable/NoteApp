@@ -17,10 +17,14 @@
                   {% else %}
                     <p class="mb-2 pb-1" style="color: #2b2a2a;">{{ user.email }}</p>
                   {% endif %}
-                    <div class="d-flex justify-content-start rounded-3 p-2 mb-2" style="background-color: #efefef;">
-                    <div>
+                  <div class="d-flex justify-content-start rounded-3 p-2 mb-2" style="background-color: #efefef;">
+                    <div class="p-2 mb-2">
+                      <p class="small text-muted mb-1">Количество тем</p>
+                      <p class="mb-0 text-center">{{user.topic.all.count}}</p>
+                    </div>
+                    <div class="p-2 mb-2">
                       <p class="small text-muted mb-1">Количество заметок</p>
-                      <p class="mb-0">{{user.task.all.count}}</p>
+                      <p class="mb-0 text-center">{{user.note.all.count}}</p>
                     </div>
                   </div>
                 </div>

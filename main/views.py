@@ -1,6 +1,6 @@
 from django.shortcuts import render, redirect
-from .models import Task
-from .forms import TaskForm
+from .models import Note, Topic
+from .forms import NoteForm, TopicForm
 from django.views.generic import UpdateView, DeleteView
 
 
@@ -10,46 +10,65 @@ def index(request):
 
 def view(request):
     user = request.user
-    tasks = user.task.all().order_by('-id')
-    context = {'tasks': tasks}
+    notes = user.note.all().order_by('-id')
+    topics = user.topic.all().order_by('-id')
+    context = {'notes': notes, 'topics': topics}
     return render(request, 'main/view.html', context)
 
 
 def data(request):
-    tasks = Task.objects.order_by('-id')
-    context = {'tasks': tasks}
+    notes = Note.objects.order_by('-id')
+    context = {'notes': notes}
     return render(request, 'main/data.html', context)
 
 
-def create(request):
+def create_note(request):
     error = ''
-    form = TaskForm()
+    form = NoteForm()
     if request.method == 'POST':
-        form = TaskForm(request.POST)
+        form = NoteForm(request.POST)
         if form.is_valid():
             ttl = form.cleaned_data["title"]
-            tsk = form.cleaned_data["task"]
-            task = Task(title=ttl, task=tsk, user=request.user)
-            task.save()
-            request.user.task.add(task)
+            txt = form.cleaned_data["text"]
+            note = Note(title=ttl, text=txt, user=request.user)
+            note.save()
+            request.user.note.add(note)
             return redirect('notes')
         else:
             error = 'Ошибка при добавлении'
 
     context = {'form': form, 'error': error}
-    return render(request, 'main/create.html', context)
+    return render(request, 'main/create_note.html', context)
+
+
+def create_topic(request):
+    error = ''
+    form = TopicForm()
+    if request.method == 'POST':
+        form = TopicForm(request.POST)
+        if form.is_valid():
+            ttl = form.cleaned_data["title"]
+            topic = Topic(title=ttl, user=request.user)
+            topic.save()
+            request.user.topic.add(topic)
+            return redirect('notes')
+        else:
+            error = 'Ошибка при добавлении'
+
+    context = {'form': form, 'error': error}
+    return render(request, 'main/create_topic.html', context)
 
 
 class TaskUpdateView(UpdateView):
-    model = Task
+    model = Note
     success_url = '/view'
-    template_name = "main/create.html"
+    template_name = "main/create_note.html"
 
-    form_class = TaskForm
+    form_class = NoteForm
 
 
 class TaskDeleteView(DeleteView):
-    model = Task
+    model = Note
     success_url = '/view'
     template_name = "main/delete.html"
 

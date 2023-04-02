@@ -7,6 +7,7 @@ from django.utils.encoding import force_bytes, force_str
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 
 from .forms import RegisterForm
+from .models import User
 from .tokens import account_activation_token
 
 
@@ -44,14 +45,14 @@ def register(request):
 
 
 def activate(request, uidb64, token):
-    User = get_user_model()
     context = {'respond': ''}
     try:
         uid = force_str(urlsafe_base64_decode(uidb64))
         user = User.objects.get(pk=uid)
-    except(TypeError, ValueError, OverflowError, User.DoesNotExist):
+    except(TypeError, ValueError, OverflowError, user.DoesNotExist):
         user = None
     if account_activation_token.check_token(user, token):
+        user.is_active = True
         user.save()
         context['respond'] = 'Спасибо за подтверждение электронной почты. Теперь вы можете войти в свою учетную запись.'
         return render(request, 'registration/accept_respond.html', context)

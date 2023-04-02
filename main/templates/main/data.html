@@ -6,11 +6,11 @@
 {% block content %}
     {% if user.is_superuser %}
             <h1>Все записи в приложении:</h1>
-            {% if tasks %}
-                {% for el in tasks %}
+            {% if notes %}
+                {% for el in notes %}
                 <div class="alert alert-dark">
                     <h3 class="mb-0 text-dark">{{ el.title|upper }} ({{el.user.username}})</h3>
-                    <pre class="mb-auto text-dark"><span class="inner-pre" style="font-family:'Helvetica'; font-size: 18px">{{ el.task|truncatechars:50 }}</span></pre>
+                    <pre class="mb-auto text-dark"><span class="inner-pre" style="font-family:'Helvetica'; font-size: 18px">{{ el.text|truncatechars:50 }}</span></pre>
                     <a href="{% url 'task-upd' el.id %}" class="btn btn-outline-dark m-1">
                         Редактировать
                     </a>

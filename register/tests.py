@@ -87,22 +87,24 @@ class SignUpTest(TestCase):
 
 class ActivationTest(TestCase):
     def setUp(self):
-        self.mock = mock.Mock(pk=4, username='test', is_active=False)
+        self.mock = mock.Mock(pk=4, username='test', email='mock@gmail.com', is_active=False)
+        self.mock.get_email_field_name.return_value = 'email'
 
     def test_wrong_activation_token(self):
         print("\nMethod: test_wrong_activation_token")
-        new_mock = mock.Mock(pk=5, username='test1', is_active=False)
+        new_mock = mock.Mock(pk=5, username='test1', email='mock1@gmail.com', is_active=False)
+        new_mock.get_email_field_name.return_value = 'email'
         token = account_activation_token.make_token(new_mock)
         self.assertFalse(account_activation_token.check_token(self.mock, token))
 
     def test_correct_activation_token(self):
         print("\nMethod: test_correct_activation_token")
         token = account_activation_token.make_token(self.mock)
-        account_activation_token.check_token(self.mock, token)
-        self.assertTrue(self.mock.is_active)
+        self.assertTrue(account_activation_token.check_token(self.mock, token))
 
     def test_repeated_activation(self):
         print("\nMethod: test_repeated_activation")
         token = account_activation_token.make_token(self.mock)
-        account_activation_token.check_token(self.mock, token)
+        if account_activation_token.check_token(self.mock, token):
+            self.mock.is_active = True
         self.assertFalse(account_activation_token.check_token(self.mock, token))
