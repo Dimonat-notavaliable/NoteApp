@@ -8,9 +8,11 @@ urlpatterns = [
     path('create_note', views.create_note, name='create_note'),
     path('create_topic', views.create_topic, name='create_topic'),
     path('view', views.view, name='notes'),
+    path('basket', views.basket, name='basket'),
     path('profile', views.profile, name='profile'),
-    path('task/<int:pk>/update', views.TaskUpdateView.as_view(), name='task-upd'),
-    path('task/<int:pk>/delete', views.TaskDeleteView.as_view(), name='task-dlt'),
+    path('task/<int:pk>/update', views.NoteUpdateView.as_view(), name='note-upd'),
+    path('task/<int:pk>/delete', views.delete_note, name='note-dlt'),
+    path('task/<int:pk>/retrieve', views.retrieve_note, name='note-rtr'),
 ]
 
 urlpatterns += staticfiles_urlpatterns()

@@ -1,5 +1,9 @@
+from datetime import datetime, timedelta
+
 from django.shortcuts import render, redirect
-from .models import Note, Topic
+from django.utils.timezone import utc
+
+from .models import NoteActive, Topic, NoteInactive
 from .forms import NoteForm, TopicForm
 from django.views.generic import UpdateView, DeleteView
 
@@ -16,8 +20,16 @@ def view(request):
     return render(request, 'main/view.html', context)
 
 
+def basket(request):
+    user = request.user
+    user.note_basket.filter(date_deleted__lte=datetime.utcnow().replace(tzinfo=utc) - timedelta(days=7)).delete()
+    notes = user.note_basket.all().order_by('-date_deleted')
+    context = {'notes': notes}
+    return render(request, 'main/basket.html', context)
+
+
 def data(request):
-    notes = Note.objects.order_by('-id')
+    notes = NoteActive.objects.order_by('-id')
     context = {'notes': notes}
     return render(request, 'main/data.html', context)
 
@@ -30,7 +42,7 @@ def create_note(request):
         if form.is_valid():
             ttl = form.cleaned_data["title"]
             txt = form.cleaned_data["text"]
-            note = Note(title=ttl, text=txt, user=request.user)
+            note = NoteActive(title=ttl, text=txt, user=request.user)
             note.save()
             request.user.note.add(note)
             return redirect('notes')
@@ -59,18 +71,26 @@ def create_topic(request):
     return render(request, 'main/create_topic.html', context)
 
 
-class TaskUpdateView(UpdateView):
-    model = Note
+class NoteUpdateView(UpdateView):
+    model = NoteActive
     success_url = '/view'
     template_name = "main/create_note.html"
 
     form_class = NoteForm
 
 
-class TaskDeleteView(DeleteView):
-    model = Note
-    success_url = '/view'
-    template_name = "main/delete.html"
+def delete_note(request, pk):
+    if request.method == 'POST':
+        note = NoteActive.objects.get(id=pk)
+        note.place_in_basket()
+        return redirect('notes')
+
+
+def retrieve_note(request, pk):
+    if request.method == 'POST':
+        note = NoteInactive.objects.get(id=pk)
+        note.retrieve()
+        return redirect('basket')
 
 
 def profile(request):

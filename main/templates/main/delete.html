@@ -4,10 +4,11 @@
 {% endblock %}
 
 {% block content %}
-    <h1>{{task.title}}</h1>
+    <h1>{{note.title}}</h1>
     <form method="post">
         {% csrf_token %}
-        <p>Вы уверены что хотите удалить эту заметку?</p>
+        <p>Вы уверены что хотите удалить эту заметку? Она будет помещена в корзину, откуда вы сможете восстановить
+            её в течении 7-ми дней</p>
         <button type="submit" class="btn btn-danger">Удалить заметку</button>
     </form>
 {% endblock %}

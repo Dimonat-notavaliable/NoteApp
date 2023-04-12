@@ -38,11 +38,9 @@ class Topic(models.Model):
 
 
 class Note(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='note', null=True)
-    topic = models.ForeignKey(Topic, on_delete=models.SET_NULL, related_name='topic', null=True)
-    color = models.ForeignKey(Color, on_delete=models.SET_NULL, related_name='color', null=True)
     title = models.CharField('Название', max_length=50)
     text = models.TextField('Содержание')
+    date_created = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
         return self.title
@@ -51,8 +49,40 @@ class Note(models.Model):
         return '/'
 
     class Meta:
+        abstract = True
+
+
+class NoteActive(Note):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='note', null=True)
+    topic = models.ForeignKey(Topic, on_delete=models.SET_NULL, related_name='topic', null=True)
+    color = models.ForeignKey(Color, on_delete=models.SET_NULL, related_name='color', null=True)
+
+    class Meta:
         verbose_name = 'Заметка'
         verbose_name_plural = 'Заметки'
+
+    def place_in_basket(self):
+        basket_note = NoteInactive(user=self.user, topic=self.topic, color=self.color, title=self.title,
+                                   text=self.text, date_created=self.date_created)
+        basket_note.save()
+        self.delete()
+
+
+class NoteInactive(Note):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='note_basket', null=True)
+    topic = models.ForeignKey(Topic, on_delete=models.SET_NULL, related_name='topic_basket', null=True)
+    color = models.ForeignKey(Color, on_delete=models.SET_NULL, related_name='color_basket', null=True)
+    date_deleted = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = 'Заметка в корзине'
+        verbose_name_plural = 'Заметки в корзине'
+
+    def retrieve(self):
+        note = NoteActive(user=self.user, topic=self.topic, color=self.color, title=self.title,
+                          text=self.text, date_created=self.date_created)
+        note.save()
+        self.delete()
 
 
 class SingletonModel(models.Model):

@@ -30,16 +30,21 @@
     <h2>Заметки без темы:</h2>
     {% if notes %}
         {% for el in notes %}
-        <div class="alert" style="background-color: {{el.color}}; ">
+        <div class="alert border border-dark " style="background-color: {{el.color}}; ">
+            <div class="">
             <h3 class="mb-0 text-dark">{{ el.title|upper }}</h3>
             <pre class="mb-auto text-dark"><span class="inner-pre" style="font-family:'Helvetica';
              font-size: 18px">{{ el.text|truncatechars:100 }}</span></pre>
-            <a href="{% url 'task-upd' el.id %}" class="btn btn-outline-dark m-1">
-                Редактировать
-            </a>
-            <a href="{% url 'task-dlt' el.id %}" class="btn btn-outline-danger m-1">
-                Удалить
-            </a>
+            </div>
+            <div class="d-flex">
+                <a href="{% url 'note-upd' el.id %}" class="btn btn-outline-dark m-1">
+                    Редактировать
+                </a>
+                <form method="POST" action="{% url 'note-dlt' el.id %}">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-outline-danger m-1">Удалить</button>
+                </form>
+            </div>
         </div>
         {% endfor %}
     {% else %}

@@ -1,10 +1,10 @@
-from .models import Note
+from .models import NoteActive, Topic
 from django.forms import ModelForm, TextInput, Textarea
 
 
 class NoteForm(ModelForm):
     class Meta:
-        model = Note
+        model = NoteActive
         fields = ['title', 'text']
         widgets = {
             'title': TextInput(attrs={
@@ -19,7 +19,7 @@ class NoteForm(ModelForm):
 
 class TopicForm(ModelForm):
     class Meta:
-        model = Note
+        model = Topic
         fields = ['title']
         widgets = {
             'title': TextInput(attrs={
