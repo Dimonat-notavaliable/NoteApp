@@ -1,4 +1,5 @@
 from django.db import models
+from django.core.cache import cache
 from register.models import User
 
 
@@ -52,3 +53,36 @@ class Note(models.Model):
     class Meta:
         verbose_name = 'Заметка'
         verbose_name_plural = 'Заметки'
+
+
+class SingletonModel(models.Model):
+
+    class Meta:
+        abstract = True
+
+    def set_cache(self):
+        cache.set(self.__class__.__name__, self)
+
+    def save(self, *args, **kwargs):
+        self.pk = 1
+        super(SingletonModel, self).save(*args, **kwargs)
+        self.set_cache()
+
+    @classmethod
+    def load(cls):
+        if cache.get(cls.__name__) is None:
+            obj, created = cls.objects.get_or_create(pk=1)
+            if not created:
+                obj.set_cache()
+        return cache.get(cls.__name__)
+
+
+class SiteLinks(SingletonModel):
+    class Meta:
+        verbose_name = 'Поддержка сайта'
+        verbose_name_plural = 'Поддержка сайта'
+
+    support = models.EmailField(default='NoteAppTPU@yandex.ru')
+    vk = models.CharField(max_length=50, blank=True)
+    telegram = models.CharField(max_length=50, blank=True)
+    instagram = models.CharField(max_length=50, blank=True)
