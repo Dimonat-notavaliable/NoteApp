@@ -9,6 +9,8 @@
         {% csrf_token %}
         {{ form.title }}<br>
         {{ form.text }}<br>
+        {{ form.topic }}<br>
+        {{ form.color }}<br>
         <button type="submit" class="btn btn-success">Сохранить</button>
         <span>{{ error }}</span>
     </form>

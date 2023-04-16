@@ -12,9 +12,14 @@ def index(request):
     return render(request, 'main/index.html', {'title': 'Главная страница'})
 
 
+def profile(request):
+    context = {}
+    return render(request, 'registration/profile.html', context)
+
+
 def view(request):
     user = request.user
-    notes = user.note.all().order_by('-id')
+    notes = user.note.all().filter(topic__isnull=True).order_by('-id')
     topics = user.topic.all().order_by('-id')
     context = {'notes': notes, 'topics': topics}
     return render(request, 'main/view.html', context)
@@ -22,7 +27,7 @@ def view(request):
 
 def basket(request):
     user = request.user
-    user.note_basket.filter(date_deleted__lte=datetime.utcnow().replace(tzinfo=utc) - timedelta(days=7)).delete()
+    user.note_basket.filter(date_deleted__lte=datetime.utcnow().replace(tzinfo=utc) - timedelta(hours=1)).delete()
     notes = user.note_basket.all().order_by('-date_deleted')
     context = {'notes': notes}
     return render(request, 'main/basket.html', context)
@@ -36,18 +41,20 @@ def data(request):
 
 def create_note(request):
     error = ''
-    form = NoteForm()
+    form = NoteForm(user=request.user)
     if request.method == 'POST':
-        form = NoteForm(request.POST)
+        form = NoteForm(request.POST, user=request.user)
         if form.is_valid():
             ttl = form.cleaned_data["title"]
             txt = form.cleaned_data["text"]
-            note = NoteActive(title=ttl, text=txt, user=request.user)
+            topic = form.cleaned_data["topic"]
+            color = form.cleaned_data["color"]
+            note = NoteActive(title=ttl, text=txt, user=request.user, topic=topic, color=color)
             note.save()
             request.user.note.add(note)
             return redirect('notes')
         else:
-            error = 'Ошибка при добавлении'
+            error = form.errors
 
     context = {'form': form, 'error': error}
     return render(request, 'main/create_note.html', context)
@@ -76,8 +83,6 @@ class NoteUpdateView(UpdateView):
     success_url = '/view'
     template_name = "main/create_note.html"
 
-    form_class = NoteForm
-
 
 def delete_note(request, pk):
     if request.method == 'POST':
@@ -91,8 +96,3 @@ def retrieve_note(request, pk):
         note = NoteInactive.objects.get(id=pk)
         note.retrieve()
         return redirect('basket')
-
-
-def profile(request):
-    context = {}
-    return render(request, 'registration/profile.html', context)

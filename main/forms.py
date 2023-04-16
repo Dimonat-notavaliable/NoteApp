@@ -1,11 +1,12 @@
-from .models import NoteActive, Topic
-from django.forms import ModelForm, TextInput, Textarea
+from .models import NoteActive, Topic, Color
+from django.forms import ModelForm, TextInput, Textarea, CharField, ModelChoiceField, Select, ChoiceField
 
 
 class NoteForm(ModelForm):
+
     class Meta:
         model = NoteActive
-        fields = ['title', 'text']
+        fields = ['title', 'text', 'topic', 'color']
         widgets = {
             'title': TextInput(attrs={
                 'class': 'form-control',
@@ -15,6 +16,24 @@ class NoteForm(ModelForm):
                 'class': 'form-control',
                 'placeholder': "Запишите здесь свои мысли"
             })}
+
+    def __init__(self, *args, **kwargs):
+        user = kwargs.pop('user', '')
+        super(NoteForm, self).__init__(*args, **kwargs)
+        self.fields['topic'] = ModelChoiceField(
+            queryset=Topic.objects.filter(user=user), required=False, empty_label="Выберите тему",
+            widget=Select(attrs={
+                'class': 'form-control',
+                'placeholder': "Тема"
+            })
+        )
+        self.fields['color'] = ModelChoiceField(
+            queryset=Color.objects.all(), required=False, empty_label="Выберите цвет",
+            widget=Select(attrs={
+                'class': 'form-control',
+                'placeholder': "Цвет"
+            })
+        )
 
 
 class TopicForm(ModelForm):

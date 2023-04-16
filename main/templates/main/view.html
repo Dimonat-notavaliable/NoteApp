@@ -30,7 +30,7 @@
     <h2>Заметки без темы:</h2>
     {% if notes %}
         {% for el in notes %}
-        <div class="alert border border-dark " style="background-color: {{el.color}}; ">
+        <div class="alert border border-dark " style="background-color: {{el.color.hex}}; ">
             <div class="">
             <h3 class="mb-0 text-dark">{{ el.title|upper }}</h3>
             <pre class="mb-auto text-dark"><span class="inner-pre" style="font-family:'Helvetica';

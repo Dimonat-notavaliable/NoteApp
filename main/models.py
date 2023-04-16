@@ -10,11 +10,13 @@ class Color(models.Model):
         ("#00FF0090", "green",),
     ]
     hex = models.CharField('HEX', max_length=10, choices=COLOR_PALETTE)
+    name = models.CharField(max_length=40, default=None, null=True)
 
     def __str__(self):
-        return self.hex
+        return self.name
 
-    def get_absolute_url(self):
+    @staticmethod
+    def get_absolute_url():
         return '/'
 
     class Meta:
@@ -29,7 +31,8 @@ class Topic(models.Model):
     def __str__(self):
         return self.title
 
-    def get_absolute_url(self):
+    @staticmethod
+    def get_absolute_url():
         return '/'
 
     class Meta:
@@ -45,7 +48,8 @@ class Note(models.Model):
     def __str__(self):
         return self.title
 
-    def get_absolute_url(self):
+    @staticmethod
+    def get_absolute_url():
         return '/'
 
     class Meta:
@@ -54,8 +58,8 @@ class Note(models.Model):
 
 class NoteActive(Note):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='note', null=True)
-    topic = models.ForeignKey(Topic, on_delete=models.SET_NULL, related_name='topic', null=True)
-    color = models.ForeignKey(Color, on_delete=models.SET_NULL, related_name='color', null=True)
+    topic = models.ForeignKey(Topic, on_delete=models.SET_NULL, related_name='topic', blank=True, null=True)
+    color = models.ForeignKey(Color, on_delete=models.SET_NULL, related_name='color', blank=True, null=True)
 
     class Meta:
         verbose_name = 'Заметка'
@@ -70,8 +74,8 @@ class NoteActive(Note):
 
 class NoteInactive(Note):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='note_basket', null=True)
-    topic = models.ForeignKey(Topic, on_delete=models.SET_NULL, related_name='topic_basket', null=True)
-    color = models.ForeignKey(Color, on_delete=models.SET_NULL, related_name='color_basket', null=True)
+    topic = models.ForeignKey(Topic, on_delete=models.SET_NULL, related_name='topic_basket', blank=True, null=True)
+    color = models.ForeignKey(Color, on_delete=models.SET_NULL, related_name='color_basket', blank=True, null=True)
     date_deleted = models.DateTimeField(auto_now_add=True)
 
     class Meta:
