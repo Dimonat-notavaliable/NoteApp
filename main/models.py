@@ -66,10 +66,8 @@ class NoteActive(Note):
         verbose_name_plural = 'Заметки'
 
     def place_in_basket(self):
-        basket_note = NoteInactive(user=self.user, topic=self.topic, color=self.color, title=self.title,
-                                   text=self.text, date_created=self.date_created)
-        basket_note.save()
-        self.delete()
+        mediator = NoteMediator()
+        mediator.convert(self)
 
 
 class NoteInactive(Note):
@@ -83,10 +81,31 @@ class NoteInactive(Note):
         verbose_name_plural = 'Заметки в корзине'
 
     def retrieve(self):
-        note = NoteActive(user=self.user, topic=self.topic, color=self.color, title=self.title,
-                          text=self.text, date_created=self.date_created)
-        note.save()
-        self.delete()
+        mediator = NoteMediator()
+        mediator.convert(self)
+
+
+class NoteMediator:
+    def __init__(self):
+        self._convertible = None
+        self._converted = None
+
+    def convert(self, note):
+        self._convertible = note
+        note_data = {'user': note.user, 'topic': note.topic,
+                     'color': note.color, 'title': note.title,
+                     'text': note.text, 'date_created': note.date_created}
+        if isinstance(note, NoteActive):
+            self._converted = NoteInactive(**note_data)
+        elif isinstance(note, NoteInactive):
+            self._converted = NoteActive(**note_data)
+        else:
+            raise ValueError()
+        self._converted.save()
+        self._convertible.delete()
+
+    class Meta:
+        abstract = True
 
 
 class SingletonModel(models.Model):
