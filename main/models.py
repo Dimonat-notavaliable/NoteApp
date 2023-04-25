@@ -8,6 +8,35 @@ from main.utils import html_2_pdf
 from register.models import User
 
 
+class ResponseFactory:
+    def factory_method(self, note):
+        return HttpResponse()
+
+    def check(self, note):
+        # Вызываем фабричный метод, чтобы получить объект.
+        obj = self.factory_method(note)
+        # Проверяем расширение файла.
+        extension = obj._content_type_for_repr.split('/')[1][:-1]
+
+        result = f'После выполнения операции создания получен файл типа: {extension}'
+        return result
+
+
+class TXTResponse(ResponseFactory):
+
+    def factory_method(self, note):
+        title = str(note.title)
+        file_data = title + "\n\n" + note.text
+        return HttpResponse(file_data, content_type='application/text charset=utf-8')
+
+
+class PDFResponse(ResponseFactory):
+
+    def factory_method(self, note):
+        pdf = html_2_pdf('main/pdf_note.html', {'note': note})
+        return HttpResponse(pdf, content_type='application/pdf')
+
+
 class Color(models.Model):
     COLOR_PALETTE = [
         ("#FFFF0090", "yellow",),

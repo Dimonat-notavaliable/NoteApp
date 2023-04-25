@@ -5,7 +5,7 @@
 
 {% block content %}
     <a href="{% url 'create_topic' %}" class="btn btn-primary btn-lg my-2" role="button" aria-pressed="true">
-            <img src = '{% static "create/img/add.png" %}' class="pb-1" style='width: 20px'/> Добавить тему
+            <img src='{% static "create/img/add.png" %}' alt="Плюс" class="pb-1" style='width: 20px'/> Добавить тему
     </a><br>
 
     <h1>Ваши темы:</h1>
@@ -25,7 +25,7 @@
     <br>
 
     <a href="{% url 'create_note' %}" class="btn btn-success btn-lg my-2" role="button" aria-pressed="true">
-            <img src = '{% static "create/img/add.png" %}' class="pb-1" style='width: 20px'/> Добавить запись
+            <img src='{% static "create/img/add.png" %}' alt="Плюс" class="pb-1" style='width: 20px'/> Добавить запись
     </a><br>
     <h2>Заметки без темы:</h2>
     {% if notes %}
@@ -39,6 +39,12 @@
             <div class="d-flex">
                 <a href="{% url 'note-upd' el.id %}" class="btn btn-outline-dark m-1">
                     Редактировать
+                </a>
+                <a href="{% url 'note-dwnld' pk=el.id extension='txt' %}" class="btn btn-outline-dark m-1">
+                    Скачать TXT
+                </a>
+                <a href="{% url 'note-dwnld' pk=el.id extension='pdf' %}" class="btn btn-outline-dark m-1">
+                    Скачать PDF
                 </a>
                 <form method="POST" action="{% url 'note-dlt' el.id %}">
                     {% csrf_token %}

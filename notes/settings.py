@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     'register',
     'crispy_forms',
     'crispy_bootstrap5',
+    'pdfkit'
 ]
 
 MIDDLEWARE = [
@@ -111,7 +112,7 @@ AUTH_USER_MODEL = 'register.User'
 
 LANGUAGE_CODE = 'ru'
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'Asia/Krasnoyarsk'
 
 USE_I18N = True
 

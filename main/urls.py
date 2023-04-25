@@ -12,6 +12,7 @@ urlpatterns = [
     path('profile', views.profile, name='profile'),
     path('task/<int:pk>/update', views.NoteUpdateView.as_view(), name='note-upd'),
     path('task/<int:pk>/delete', views.delete_note, name='note-dlt'),
+    path('task/<int:pk>/download/<str:extension>', views.download_note, name='note-dwnld'),
     path('task/<int:pk>/retrieve', views.retrieve_note, name='note-rtr'),
 ]
 

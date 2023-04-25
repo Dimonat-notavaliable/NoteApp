@@ -1,11 +1,11 @@
 from datetime import datetime, timedelta
 
 from django.shortcuts import render, redirect
-from django.utils.timezone import utc
+from django.utils.encoding import escape_uri_path
+from django.views.generic import UpdateView
 
-from .models import NoteActive, Topic, NoteInactive
 from .forms import NoteForm, TopicForm
-from django.views.generic import UpdateView, DeleteView
+from .models import NoteActive, Topic, NoteInactive, PDFResponse, TXTResponse, ResponseFactory
 
 
 def index(request):
@@ -19,7 +19,7 @@ def profile(request):
 
 def view(request):
     user = request.user
-    notes = user.note.all().filter(topic__isnull=True).order_by('-id')
+    notes = user.note.all().filter(topic__isnull=True).order_by('-date_created')
     topics = user.topic.all().order_by('-id')
     context = {'notes': notes, 'topics': topics}
     return render(request, 'main/view.html', context)
@@ -27,7 +27,7 @@ def view(request):
 
 def basket(request):
     user = request.user
-    user.note_basket.filter(date_deleted__lte=datetime.utcnow().replace(tzinfo=utc) - timedelta(hours=1)).delete()
+    user.note_basket.filter(date_deleted__lte=datetime.now() - timedelta(days=7)).delete()
     notes = user.note_basket.all().order_by('-date_deleted')
     context = {'notes': notes}
     return render(request, 'main/basket.html', context)
@@ -81,6 +81,7 @@ def create_topic(request):
 class NoteUpdateView(UpdateView):
     model = NoteActive
     success_url = '/view'
+    form_class = NoteForm
     template_name = "main/create_note.html"
 
 
@@ -89,6 +90,19 @@ def delete_note(request, pk):
         note = NoteActive.objects.get(id=pk)
         note.place_in_basket()
         return redirect('notes')
+
+
+def download_note(pk, extension):
+    note = NoteActive.objects.get(id=pk)
+    factory = ResponseFactory()
+    if extension == 'pdf':
+        factory = PDFResponse()
+    elif extension == 'txt':
+        factory = TXTResponse()
+    response = factory.factory_method(note)
+    response['Content-Disposition'] = f"attachment; filename={escape_uri_path(f'{note.title}.{extension}')}"
+    return response
+
 
 
 def retrieve_note(request, pk):
