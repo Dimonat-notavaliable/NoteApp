@@ -1,12 +1,8 @@
 from unittest import mock
 
 from django.contrib.auth import get_user_model
-from django.core.mail import EmailMultiAlternatives
-from django.template.loader import get_template
 from django.test import TestCase
-from django.utils.encoding import force_bytes
 from django.utils.html import strip_tags
-from django.utils.http import urlsafe_base64_encode
 
 from register.forms import RegisterForm
 from register.tokens import account_activation_token
@@ -20,6 +16,7 @@ class SignUpTest(TestCase):
 
     def tearDown(self):
         self.user.delete()
+
 
     def test_correct_data(self):
         print("\nMethod: test_correct_data")
