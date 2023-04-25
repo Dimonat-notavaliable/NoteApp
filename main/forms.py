@@ -1,5 +1,6 @@
+from django.forms import ModelForm, TextInput, Textarea, ModelChoiceField, Select
+
 from .models import NoteActive, Topic, Color
-from django.forms import ModelForm, TextInput, Textarea, CharField, ModelChoiceField, Select, ChoiceField
 
 
 class NoteForm(ModelForm):

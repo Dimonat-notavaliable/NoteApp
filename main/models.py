@@ -1,5 +1,10 @@
-from django.db import models
+from datetime import datetime
+
 from django.core.cache import cache
+from django.db import models
+from django.http import HttpResponse
+
+from main.utils import html_2_pdf
 from register.models import User
 
 
@@ -43,7 +48,7 @@ class Topic(models.Model):
 class Note(models.Model):
     title = models.CharField('Название', max_length=50)
     text = models.TextField('Содержание')
-    date_created = models.DateTimeField(auto_now_add=True)
+    date_created = models.DateTimeField()
 
     def __str__(self):
         return self.title
@@ -51,6 +56,11 @@ class Note(models.Model):
     @staticmethod
     def get_absolute_url():
         return '/'
+
+    def save(self, *args, **kwargs):
+        if self.date_created is None:
+            self.date_created = datetime.now()
+        super().save(*args, **kwargs)
 
     class Meta:
         abstract = True
@@ -103,6 +113,7 @@ class NoteMediator:
             raise ValueError()
         self._converted.save()
         self._convertible.delete()
+        return self._converted
 
     class Meta:
         abstract = True
