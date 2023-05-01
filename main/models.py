@@ -1,3 +1,4 @@
+from abc import ABC, abstractmethod
 from datetime import datetime
 
 from django.core.cache import cache
@@ -59,7 +60,6 @@ class Color(models.Model):
 
 
 class Topic(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='topic', null=True)
     title = models.CharField('Название', max_length=50)
 
     def __str__(self):
@@ -70,8 +70,23 @@ class Topic(models.Model):
         return '/'
 
     class Meta:
+        abstract = True
+
+
+class TopicActive(Topic):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='topic', null=True)
+
+    class Meta:
         verbose_name = 'Тема'
         verbose_name_plural = 'Темы'
+
+
+class TopicInactive(Topic):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='topic_basket', null=True)
+
+    class Meta:
+        verbose_name = 'Тема в корзине'
+        verbose_name_plural = 'Темы в корзине'
 
 
 class Note(models.Model):
@@ -97,8 +112,8 @@ class Note(models.Model):
 
 class NoteActive(Note):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='note', null=True)
-    topic = models.ForeignKey(Topic, on_delete=models.SET_NULL, related_name='topic', blank=True, null=True)
-    color = models.ForeignKey(Color, on_delete=models.SET_NULL, related_name='color', blank=True, null=True)
+    topic = models.ForeignKey(TopicActive, on_delete=models.SET_NULL, related_name='note', blank=True, null=True)
+    color = models.ForeignKey(Color, on_delete=models.SET_NULL, related_name='note', blank=True, null=True)
 
     class Meta:
         verbose_name = 'Заметка'
@@ -111,8 +126,11 @@ class NoteActive(Note):
 
 class NoteInactive(Note):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='note_basket', null=True)
-    topic = models.ForeignKey(Topic, on_delete=models.SET_NULL, related_name='topic_basket', blank=True, null=True)
-    color = models.ForeignKey(Color, on_delete=models.SET_NULL, related_name='color_basket', blank=True, null=True)
+    topic_active = models.ForeignKey(TopicActive, on_delete=models.SET_NULL, related_name='active_note_basket',
+                                     blank=True, null=True)
+    topic_inactive = models.ForeignKey(TopicInactive, on_delete=models.CASCADE, related_name='inactive_note_basket',
+                                       blank=True, null=True)
+    color = models.ForeignKey(Color, on_delete=models.SET_NULL, related_name='note_basket', blank=True, null=True)
     date_deleted = models.DateTimeField(auto_now_add=True)
 
     class Meta:
@@ -146,6 +164,35 @@ class NoteMediator:
 
     class Meta:
         abstract = True
+
+
+class AbstractCreator(ABC):
+
+    @abstractmethod
+    def create_topic(self, topic_data) -> Topic:
+        return Topic(**topic_data)
+
+    @abstractmethod
+    def create_note(self, note_data) -> Note:
+        return Note(**note_data)
+
+
+class ActiveCreator(AbstractCreator):
+
+    def create_topic(self, topic_data) -> Topic:
+        return TopicActive(**topic_data)
+
+    def create_note(self, note_data) -> Note:
+        return NoteActive(**note_data)
+
+
+class InactiveCreator(AbstractCreator):
+
+    def create_topic(self, topic_data) -> Topic:
+        return TopicInactive(**topic_data)
+
+    def create_note(self, note_data) -> Note:
+        return NoteInactive(**note_data)
 
 
 class SingletonModel(models.Model):

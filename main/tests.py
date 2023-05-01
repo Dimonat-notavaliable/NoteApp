@@ -1,6 +1,8 @@
+from django.contrib.auth import get_user_model
 from django.test import TestCase
 from django.http import HttpResponse
-from main.models import SiteLinks, PDFResponse, TXTResponse, NoteActive, NoteInactive, NoteMediator
+from main.models import SiteLinks, PDFResponse, TXTResponse, NoteActive, NoteInactive, NoteMediator, TopicInactive,\
+    TopicActive, ActiveCreator, InactiveCreator
 
 
 class SingletonTest(TestCase):
@@ -54,3 +56,31 @@ class FabricTest(TestCase):
         response = PDFResponse()
         print(response.check(self.note))
         self.assertTrue(isinstance(response.factory_method(self.note), HttpResponse))
+
+
+class AbstractFactoryTest(TestCase):
+    def setUp(self):
+        self.user = get_user_model().objects.create_user(username='non_unique', password='ThisIsStrongPassword',
+                                                         email='nonunique@example.com')
+        self.user.save()
+        self.topic_data = {'user': self.user, 'title': 'Тема'}
+        self.note_data = {'user': self.user, 'title': 'Название', 'text': 'Текст'}
+
+    def tearDown(self):
+        self.user.delete()
+
+    def test_inactive_factory(self):
+        print("\nMethod: test_inactive_factory")
+        factory = InactiveCreator()
+        topic = factory.create_topic(self.topic_data)
+        note = factory.create_note(self.note_data)
+        print(f'Созданы: тема {type(topic)}, заметка {type(note)}')
+        self.assertTrue(isinstance(topic, TopicInactive) and isinstance(note, NoteInactive))
+
+    def test_active_factory(self):
+        print("\nMethod: test_active_factory")
+        factory = ActiveCreator()
+        topic = factory.create_topic(self.topic_data)
+        note = factory.create_note(self.note_data)
+        print(f'Созданы: тема {type(topic)}, заметка {type(note)}')
+        self.assertTrue(isinstance(topic, TopicActive) and isinstance(note, NoteActive))
