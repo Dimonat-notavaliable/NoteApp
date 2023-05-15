@@ -1,8 +1,7 @@
 from django.contrib.auth import get_user_model
 from django.test import TestCase
 from django.http import HttpResponse
-from main.models import SiteLinks, PDFResponse, TXTResponse, NoteActive, NoteInactive, NoteMediator, TopicInactive,\
-    TopicActive, ActiveCreator, InactiveCreator
+from main.models import SiteLinks, PDFResponse, TXTResponse, NoteActive, NoteInactive, NoteMediator, NoteProtector
 
 
 class SingletonTest(TestCase):
@@ -58,29 +57,36 @@ class FabricTest(TestCase):
         self.assertTrue(isinstance(response.factory_method(self.note), HttpResponse))
 
 
-class AbstractFactoryTest(TestCase):
+class ProxyTest(TestCase):
     def setUp(self):
-        self.user = get_user_model().objects.create_user(username='non_unique', password='ThisIsStrongPassword',
-                                                         email='nonunique@example.com')
-        self.user.save()
-        self.topic_data = {'user': self.user, 'title': 'Тема'}
-        self.note_data = {'user': self.user, 'title': 'Название', 'text': 'Текст'}
+        self.user = get_user_model().objects.create_user(username='Allowed', password='ThisIsStrongPassword',
+                                                         email='allowed@gmail.com')
+        self.intruder = get_user_model().objects.create_user(username='Intruder', password='ThisIsStrongPassword',
+                                                         email='intruder@gmail.com')
 
-    def tearDown(self):
-        self.user.delete()
+    def test_delete_protection(self):
+        print("\nMethod: test_delete_protection")
+        note = NoteActive(id=1, user=self.user, title='Защищенная заметка 1', text='Проверка удаления')
+        proxy = NoteProtector(note)
+        print(f'Пользователь {self.intruder.username} пытается удалить заметку.'
+              f' Ответ: {proxy.place_in_basket(self.intruder)}')
+        print(f'Пользователь {self.user.username} пытается удалить заметку.'
+              f' Ответ: {proxy.place_in_basket(self.user)}')
 
-    def test_inactive_factory(self):
-        print("\nMethod: test_inactive_factory")
-        factory = InactiveCreator()
-        topic = factory.create_topic(self.topic_data)
-        note = factory.create_note(self.note_data)
-        print(f'Созданы: тема {type(topic)}, заметка {type(note)}')
-        self.assertTrue(isinstance(topic, TopicInactive) and isinstance(note, NoteInactive))
+    def test_download_protection(self):
+        print("\nMethod: test_download_protection")
+        note = NoteActive(id=2, user=self.user, title='Защищенная заметка 2', text='Проверка загрузки')
+        proxy = NoteProtector(note)
+        print(f'Пользователь {self.intruder.username} пытается скачать заметку.'
+              f' Ответ: {proxy.download("txt", self.intruder)}')
+        print(f'Пользователь {self.user.username} пытается скачать заметку.'
+              f' Ответ: {type(proxy.download("txt", self.user))}')
 
-    def test_active_factory(self):
-        print("\nMethod: test_active_factory")
-        factory = ActiveCreator()
-        topic = factory.create_topic(self.topic_data)
-        note = factory.create_note(self.note_data)
-        print(f'Созданы: тема {type(topic)}, заметка {type(note)}')
-        self.assertTrue(isinstance(topic, TopicActive) and isinstance(note, NoteActive))
+    def test_retrieve_protection(self):
+        print("\nMethod: test_retrieve_protection")
+        note = NoteInactive(id=3, user=self.user, title='Защищенная заметка 3', text='Проверка восстановления')
+        proxy = NoteProtector(note)
+        print(f'Пользователь {self.intruder.username} пытается восстановить заметку.'
+              f' Ответ: {proxy.retrieve(self.intruder)}')
+        print(f'Пользователь {self.user.username} пытается восстановить заметку.'
+              f' Ответ: {proxy.retrieve(self.user)}')

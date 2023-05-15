@@ -18,7 +18,6 @@ class ResponseFactory:
         obj = self.factory_method(note)
         # Проверяем расширение файла.
         extension = obj._content_type_for_repr.split('/')[1][:-1]
-
         result = f'После выполнения операции создания получен файл типа: {extension}'
         return result
 
@@ -123,6 +122,11 @@ class NoteActive(Note):
         mediator = NoteMediator()
         mediator.convert(self)
 
+    def download(self, extension):
+        factories = {'pdf': PDFResponse(), 'txt': TXTResponse()}
+        factory = factories[extension]
+        return factory.factory_method(self)
+
 
 class NoteInactive(Note):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='note_basket', null=True)
@@ -166,6 +170,32 @@ class NoteMediator:
         abstract = True
 
 
+# Proxy pattern
+class NoteProtector(Note):
+    def __init__(self, note: Note):
+        self.note = note
+
+    def place_in_basket(self, request_user: User):
+        if (self.note.user == request_user) or request_user.is_superuser:
+            self.note.place_in_basket()
+            return f'Заметка "{self.note.title}" помещена в корзину'
+        return 'У вас нет доступа к данной заметке'
+
+    def retrieve(self, request_user: User):
+        if (self.note.user == request_user) or request_user.is_superuser:
+            self.note.retrieve()
+            return f'Заметка "{self.note.title}" восстановлена'
+        return 'У вас нет доступа к данной заметке'
+
+    def download(self, extension, request_user: User):
+        if (self.note.user == request_user) or request_user.is_superuser:
+            return self.note.download(extension)
+        return False
+
+    class Meta:
+        abstract = True
+
+
 class AbstractCreator(ABC):
 
     @abstractmethod
@@ -196,7 +226,6 @@ class InactiveCreator(AbstractCreator):
 
 
 class SingletonModel(models.Model):
-
     class Meta:
         abstract = True
 

@@ -1,11 +1,13 @@
 from datetime import datetime, timedelta
 
+from django.contrib import messages
 from django.shortcuts import render, redirect
+from django.urls import reverse
 from django.utils.encoding import escape_uri_path
 from django.views.generic import UpdateView
 
 from .forms import NoteForm, TopicForm
-from .models import NoteActive, Topic, NoteInactive, PDFResponse, TXTResponse, ResponseFactory
+from .models import NoteActive, Topic, NoteInactive, NoteProtector
 
 
 def index(request):
@@ -19,7 +21,7 @@ def profile(request):
 
 def view(request):
     user = request.user
-    notes = user.note.all().filter(topic__isnull=True).order_by('-date_created')
+    notes = NoteActive.objects.all().filter(topic__isnull=True).order_by('-date_created')
     topics = user.topic.all().order_by('-id')
     context = {'notes': notes, 'topics': topics}
     return render(request, 'main/view.html', context)
@@ -88,25 +90,25 @@ class NoteUpdateView(UpdateView):
 def delete_note(request, pk):
     if request.method == 'POST':
         note = NoteActive.objects.get(id=pk)
-        note.place_in_basket()
-        return redirect('notes')
+        proxy = NoteProtector(note)
+        messages.info(request, proxy.place_in_basket(request.user))
+        return redirect(reverse('notes') + '#message')
 
 
-def download_note(pk, extension):
+def download_note(request, pk, extension):
     note = NoteActive.objects.get(id=pk)
-    factory = ResponseFactory()
-    if extension == 'pdf':
-        factory = PDFResponse()
-    elif extension == 'txt':
-        factory = TXTResponse()
-    response = factory.factory_method(note)
+    proxy = NoteProtector(note)
+    response = proxy.download(extension, request.user)
+    if not response:
+        messages.info(request, "У вас нет доступа к данной заметке")
+        return redirect(reverse('notes') + '#message')
     response['Content-Disposition'] = f"attachment; filename={escape_uri_path(f'{note.title}.{extension}')}"
     return response
-
 
 
 def retrieve_note(request, pk):
     if request.method == 'POST':
         note = NoteInactive.objects.get(id=pk)
-        note.retrieve()
+        proxy = NoteProtector(note)
+        messages.info(request, proxy.retrieve(request.user))
         return redirect('basket')

@@ -5,6 +5,13 @@
 
 {% block content %}
     <h1>Удаленные заметки:</h1>
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-success" role="alert" id="message">
+              {{ message }}
+            </div>
+        {% endfor %}
+    {% endif %}
     {% if notes %}
         {% for el in notes %}
         <div class="alert border border-dark" style="background-color: {{el.color}}; ">

@@ -28,6 +28,13 @@
             <img src='{% static "create/img/add.png" %}' alt="Плюс" class="pb-1" style='width: 20px'/> Добавить запись
     </a><br>
     <h2>Заметки без темы:</h2>
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-danger" role="alert" id="message">
+              {{ message }}
+            </div>
+        {% endfor %}
+    {% endif %}
     {% if notes %}
         {% for el in notes %}
         <div class="alert border border-dark " style="background-color: {{el.color.hex}}; ">
@@ -54,6 +61,6 @@
         </div>
         {% endfor %}
     {% else %}
-        <p>У вас нет заметок без темы</p>
+        <p class="font-weight-bold">У вас нет заметок без темы</p>
     {% endif %}
 {% endblock %}
