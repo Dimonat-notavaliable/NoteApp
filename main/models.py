@@ -5,6 +5,7 @@ from django.core.cache import cache
 from django.db import models
 from django.http import HttpResponse
 
+from translate import Translator
 from main.utils import html_2_pdf
 from register.models import User
 
@@ -59,6 +60,7 @@ class Color(models.Model):
 
 
 class Topic(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='topic', null=True)
     title = models.CharField('Название', max_length=50)
 
     def __str__(self):
@@ -67,26 +69,6 @@ class Topic(models.Model):
     @staticmethod
     def get_absolute_url():
         return '/'
-
-    class Meta:
-        abstract = True
-
-
-class TopicActive(Topic):
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='topic', null=True)
-
-    class Meta:
-        verbose_name = 'Тема'
-        verbose_name_plural = 'Темы'
-
-
-class TopicInactive(Topic):
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='topic_basket', null=True)
-
-    class Meta:
-        verbose_name = 'Тема в корзине'
-        verbose_name_plural = 'Темы в корзине'
-
 
 class Note(models.Model):
     title = models.CharField('Название', max_length=50)
@@ -111,7 +93,7 @@ class Note(models.Model):
 
 class NoteActive(Note):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='note', null=True)
-    topic = models.ForeignKey(TopicActive, on_delete=models.SET_NULL, related_name='note', blank=True, null=True)
+    topic = models.ForeignKey(Topic, on_delete=models.SET_NULL, related_name='note', blank=True, null=True)
     color = models.ForeignKey(Color, on_delete=models.SET_NULL, related_name='note', blank=True, null=True)
 
     class Meta:
@@ -130,10 +112,7 @@ class NoteActive(Note):
 
 class NoteInactive(Note):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='note_basket', null=True)
-    topic_active = models.ForeignKey(TopicActive, on_delete=models.SET_NULL, related_name='active_note_basket',
-                                     blank=True, null=True)
-    topic_inactive = models.ForeignKey(TopicInactive, on_delete=models.CASCADE, related_name='inactive_note_basket',
-                                       blank=True, null=True)
+    topic = models.ForeignKey(Topic, on_delete=models.SET_NULL, related_name='topic_basket', blank=True, null=True)
     color = models.ForeignKey(Color, on_delete=models.SET_NULL, related_name='note_basket', blank=True, null=True)
     date_deleted = models.DateTimeField(auto_now_add=True)
 
@@ -196,35 +175,6 @@ class NoteProtector(Note):
         abstract = True
 
 
-class AbstractCreator(ABC):
-
-    @abstractmethod
-    def create_topic(self, topic_data) -> Topic:
-        return Topic(**topic_data)
-
-    @abstractmethod
-    def create_note(self, note_data) -> Note:
-        return Note(**note_data)
-
-
-class ActiveCreator(AbstractCreator):
-
-    def create_topic(self, topic_data) -> Topic:
-        return TopicActive(**topic_data)
-
-    def create_note(self, note_data) -> Note:
-        return NoteActive(**note_data)
-
-
-class InactiveCreator(AbstractCreator):
-
-    def create_topic(self, topic_data) -> Topic:
-        return TopicInactive(**topic_data)
-
-    def create_note(self, note_data) -> Note:
-        return NoteInactive(**note_data)
-
-
 class SingletonModel(models.Model):
     class Meta:
         abstract = True
@@ -255,3 +205,194 @@ class SiteLinks(SingletonModel):
     vk = models.CharField(max_length=50, blank=True)
     telegram = models.CharField(max_length=50, blank=True)
     instagram = models.CharField(max_length=50, blank=True)
+
+
+class State(ABC):
+    @abstractmethod
+    def edit(self, note, name=None, text=None):
+        pass
+
+    @abstractmethod
+    def save(self, note):
+        pass
+
+    @abstractmethod
+    def download(self, note):
+        pass
+
+    @abstractmethod
+    def delete(self, note):
+        pass
+
+    @abstractmethod
+    def show(self, note):
+        pass
+
+
+class Stable(State):
+    def edit(self, note, name=None, text=None):
+        note._state = Editable()
+        print(note.strategy.translate_from_rus('Заметка переведена в режим редактирования.'))
+
+    def save(self, note):
+        print(note.strategy.translate_from_rus('Заметка не была изменена, состояние не меняется.'))
+
+    def download(self, note):
+        note._state = Downloadable()
+        print(note.strategy.translate_from_rus('Выберите место для загрузки заметки.'))
+
+    def delete(self, note):
+        note._state = InBasket()
+        print(note.strategy.translate_from_rus('Заметка помещена в корзину.'))
+
+    def show(self, note):
+        name = note.strategy.translate_from_rus(note.name)
+        text = note.strategy.translate_from_rus(note.text)
+        note_word = note.strategy.translate_from_rus('Заметка')
+        return f"{note_word} '{name}' (язык отображения {note.strategy}):\n{text}"
+
+    def __str__(self):
+        return 'Стабильное состояние'
+
+
+class Editable(State):
+    def edit(self, note, name=None, text=None):
+        if name is not None:
+            note.name = name
+        if text is not None:
+            note.text = text
+        print(note.strategy.translate_from_rus('Свойства заметки изменены.'))
+
+    def save(self, note):
+        note._state = Stable()
+        print(note.strategy.translate_from_rus('Изменения заметки сохранены.'))
+
+    def download(self, note):
+        print(note.strategy.translate_from_rus('Сохраните заметку перед загрузкой.'))
+
+    def delete(self, note):
+        print(note.strategy.translate_from_rus('Сохраните заметку перед удалением.'))
+
+    def show(self, note):
+        name = note.strategy.translate_from_rus(note.name)
+        text = note.strategy.translate_from_rus("находится в режиме редактирования.")
+        note_word = note.strategy.translate_from_rus('Заметка')
+        return f"{note_word} '{name}' {text}"
+
+    def __str__(self):
+        return 'Состояние редактирования'
+
+
+class Downloadable(State):
+    def edit(self, note, name=None, text=None):
+        print(note.strategy.translate_from_rus('Заметка не может быть изменена при загрузке.'))
+
+    def save(self, note):
+        note._state = Stable()
+        print(note.strategy.translate_from_rus('Заметка была сохранена на компьютере.'))
+
+    def download(self, note):
+        print(note.strategy.translate_from_rus('Вы уже загружаете данную заметку.'))
+
+    def delete(self, note):
+        note._state = Stable()
+        print(note.strategy.translate_from_rus('Загрузка была отменена.'))
+
+    def show(self, note):
+        name = note.strategy.translate_from_rus(note.name)
+        text = note.strategy.translate_from_rus("находится в режиме загрузки.")
+        note_word = note.strategy.translate_from_rus('Заметка')
+        return f"{note_word} '{name}' {text}"
+
+    def __str__(self):
+        return 'Состояние загрузки'
+
+
+class InBasket(State):
+    def edit(self, note, name=None, text=None):
+        print(note.strategy.translate_from_rus('Заметка не может быть изменена из корзины.'))
+
+    def save(self, note):
+        note._state = Stable()
+        print(note.strategy.translate_from_rus('Заметка была восстановлена.'))
+
+    def download(self, note):
+        print(note.strategy.translate_from_rus('Заметка не может быть загружена из корзины.'))
+
+    def delete(self, note):
+        del note
+        print('Заметка удалена без возможности восстановления.')
+
+    def show(self, note):
+        name = note.strategy.translate_from_rus(note.name)
+        text = note.strategy.translate_from_rus("находится в корзине.")
+        note_word = note.strategy.translate_from_rus('Заметка')
+        return f"{note_word} '{name}' {text}"
+
+    def __str__(self):
+        return 'Заметка в корзине'
+
+
+class Strategy(ABC):
+    @abstractmethod
+    def translate_from_rus(self, text):
+        pass
+
+
+class RussianText(Strategy):
+    def translate_from_rus(self, text):
+        return text
+
+    def __str__(self):
+        return 'Русский'
+
+
+class EnglishText(Strategy):
+    def translate_from_rus(self, text):
+        translator = Translator(from_lang='ru', to_lang='en')
+        eng_text = translator.translate(text)
+        return eng_text
+
+    def __str__(self):
+        return 'English'
+
+
+class GermanText(Strategy):
+    def translate_from_rus(self, text):
+        translator = Translator(from_lang='ru', to_lang='de')
+        ger_text = translator.translate(text)
+        return ger_text
+
+    def __str__(self):
+        return 'Deutsch'
+
+
+class StatedNote:
+    def __init__(self, name, text, state: State = Stable(), strategy: Strategy = RussianText()):
+        self.name = name
+        self.text = text
+        self._state = state
+        self._strategy = strategy
+
+    def edit(self, name=None, text=None):
+        self._state.edit(self, name, text)
+
+    def save(self):
+        self._state.save(self)
+
+    def download(self):
+        self._state.download(self)
+
+    def delete(self):
+        self._state.delete(self)
+
+    @property
+    def strategy(self) -> Strategy:
+        return self._strategy
+
+    @strategy.setter
+    def strategy(self, strategy: Strategy) -> None:
+        self._strategy = strategy
+
+    def __str__(self):
+        return self._state.show(self)
