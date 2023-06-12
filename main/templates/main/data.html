@@ -11,12 +11,6 @@
                 <div class="alert alert-dark">
                     <h3 class="mb-0 text-dark">{{ el.title|upper }} ({{el.user.username}})</h3>
                     <pre class="mb-auto text-dark"><span class="inner-pre" style="font-family:'Helvetica'; font-size: 18px">{{ el.text|truncatechars:50 }}</span></pre>
-                    <a href="{% url 'note-upd' el.id %}" class="btn btn-outline-dark m-1">
-                        Редактировать
-                    </a>
-                    <a href="{% url 'note-dlt' el.id %}" class="btn btn-outline-danger m-1">
-                        Удалить
-                    </a>
                 </div>
                 {% endfor %}
             {% else %}

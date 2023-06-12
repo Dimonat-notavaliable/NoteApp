@@ -1,35 +1,13 @@
 {% extends 'main/base.html'%}
 {% load static %}
 
-{% block title %}Заметки{% endblock %}
+{% block title %}Тема: {{topic}}{% endblock %}
 
 {% block content %}
-    <a href="{% url 'create_topic' %}" class="btn btn-primary btn-lg my-2" role="button" aria-pressed="true">
-            <img src='{% static "create/img/add.png" %}' alt="+" class="pb-1" style='width: 20px'/> Новая тема
-    </a><br>
-
-    <h1>Ваши темы:</h1>
-    {% if topics %}
-      <div class="row">
-        {% for el in topics %}
-          <div class="card text-white bg-primary mb-1 col-md-4">
-            <div class="card-body">
-              <p class="card-text text-center">{{ el.title|upper }}</p>
-            </div>
-            <a href="{% url 'topic_notes' el.id %}" class="stretched-link">
-            </a>
-          </div>
-        {% endfor %}
-        </div>
-    {% else %}
-        <p>Вы ещё не создавали темы</p>
-    {% endif %}
-    <br>
-
     <a href="{% url 'create_note' %}" class="btn btn-success btn-lg my-2" role="button" aria-pressed="true">
             <img src='{% static "create/img/add.png" %}' alt="+" class="pb-1" style='width: 20px'/> Новая заметка
     </a><br>
-    <h2>Заметки без темы:</h2>
+    <h2>Заметки по теме {{topic}}:</h2>
     {% if messages %}
         {% for message in messages %}
             <div class="alert alert-danger" role="alert" id="message">
@@ -57,12 +35,12 @@
                 </a>
                 <form method="POST" action="{% url 'note-dlt' el.id %}">
                     {% csrf_token %}
-                    <button type="submit" class="btn btn-outline-danger m-1" onclick="return confirm('Вы уверены?');">Удалить</button>
+                    <button type="submit" class="btn btn-outline-danger m-1">Удалить</button>
                 </form>
             </div>
         </div>
         {% endfor %}
     {% else %}
-        <p class="font-weight-bold">У вас нет заметок без темы</p>
+        <p class="font-weight-bold">У вас нет заметок по этой теме</p>
     {% endif %}
 {% endblock %}

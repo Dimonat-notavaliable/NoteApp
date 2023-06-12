@@ -21,10 +21,18 @@ def profile(request):
 
 def view(request):
     user = request.user
-    notes = NoteActive.objects.all().filter(topic__isnull=True).order_by('-date_created')
-    topics = user.topic.all().order_by('-id')
+    notes = user.note.filter(topic__isnull=True).order_by('-date_created')
+    topics = user.topic.all().order_by('title')
     context = {'notes': notes, 'topics': topics}
     return render(request, 'main/view.html', context)
+
+
+def view_topic(request, pk):
+    user = request.user
+    topic = user.topic.get(id=pk)
+    notes = NoteActive.objects.all().filter(topic=topic).order_by('-date_created')
+    context = {'notes': notes, 'topic': topic.title}
+    return render(request, 'main/view_topic.html', context)
 
 
 def basket(request):
@@ -85,6 +93,11 @@ class NoteUpdateView(UpdateView):
     success_url = '/view'
     form_class = NoteForm
     template_name = "main/create_note.html"
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs.update({'user': self.request.user})
+        return kwargs
 
 
 def delete_note(request, pk):

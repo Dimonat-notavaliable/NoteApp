@@ -8,6 +8,7 @@ urlpatterns = [
     path('create_note', views.create_note, name='create_note'),
     path('create_topic', views.create_topic, name='create_topic'),
     path('view', views.view, name='notes'),
+    path('view/topic/<int:pk>', views.view_topic, name='topic_notes'),
     path('basket', views.basket, name='basket'),
     path('profile', views.profile, name='profile'),
     path('task/<int:pk>/update', views.NoteUpdateView.as_view(), name='note-upd'),
