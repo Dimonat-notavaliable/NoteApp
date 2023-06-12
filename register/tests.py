@@ -4,6 +4,7 @@ from django.contrib.auth import get_user_model
 from django.test import TestCase
 from django.utils.html import strip_tags
 
+from register.models import ColorPreference, Color
 from register.forms import RegisterForm
 from register.tokens import account_activation_token
 
@@ -16,7 +17,6 @@ class SignUpTest(TestCase):
 
     def tearDown(self):
         self.user.delete()
-
 
     def test_correct_data(self):
         print("\nMethod: test_correct_data")
@@ -105,3 +105,66 @@ class ActivationTest(TestCase):
         if account_activation_token.check_token(self.mock, token):
             self.mock.is_active = True
         self.assertFalse(account_activation_token.check_token(self.mock, token))
+
+
+class FlyweightTest(TestCase):
+    def setUp(self):
+        self.red = Color(name='Красный', hex="#FF000050")
+        self.red.save()
+
+        self.green = Color(name='Зеленый', hex="#00FF0090")
+        self.green.save()
+
+        self.yellow = Color(name='Желтый', hex="#FFFF0090")
+        self.yellow.save()
+
+        self.magenta = Color(name='Фиолетовый', hex="#FF00FF90")
+        self.magenta.save()
+
+        self.default = ColorPreference(
+            high_importance=self.red,
+            medium_importance=self.yellow,
+            low_importance=self.green
+        )
+        self.default.save()
+        self.user = get_user_model().objects.create_user(username='non_unique', password='ThisIsStrongPassword',
+                                                         email='nonunique@example.com',
+                                                         preference=self.default)
+        self.user.save()
+
+    def test_default_preference(self):
+        print("\nMethod: test_default_preference")
+        print(f'Идентификатор стандартной схемы: {self.user.preference.id}')
+
+    def test_same_preference_link(self):
+        print("\nMethod: test_same_preference_link")
+        new_preference = ColorPreference(high_importance=self.red,
+                                         medium_importance=self.yellow,
+                                         low_importance=self.green
+                                         )
+        new_preference.save()
+        self.assertEqual(new_preference, self.default)
+
+    def test_same_preference(self):
+        print("\nMethod: test_same_preference")
+        new_user = get_user_model().objects.create_user(username='Arkadii', password='ThisIsStrongPassword',
+                                                        email='unique@example.com',
+                                                        preference=ColorPreference(
+                                                            high_importance=self.red,
+                                                            medium_importance=self.yellow,
+                                                            low_importance=self.green
+                                                        ))
+        new_user.save()
+        self.assertEqual(new_user.preference.id, self.user.preference.id)
+
+    def test_new_preference(self):
+        print("\nMethod: test_new_preference")
+        new_user = get_user_model().objects.create_user(username='Arkadii', password='ThisIsStrongPassword',
+                                                        email='unique@example.com',
+                                                        preference=ColorPreference(
+                                                            high_importance=self.red,
+                                                            medium_importance=self.yellow,
+                                                            low_importance=self.magenta
+                                                        ))
+        new_user.save()
+        self.assertNotEqual(new_user.preference.id, self.user.preference.id)
